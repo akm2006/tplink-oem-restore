@@ -29,48 +29,55 @@ This guide is for users who:
 
 ---
 
+Here's your updated section with the Windows method and credit to the Reddit user:
+
+---
+
 ## 🧰 Step 1: Get the OEM Firmware and Strip It
 
 1. Go to TP-Link official site → Support → Your Router Model (e.g., Archer C20 v5) → Download the latest firmware
 2. **Use one of the following methods to strip the firmware header (first 131584 bytes):**
 
 ### 🟢 Web App (Recommended)
-- Use the browser-based tool to strip firmware easily:
+
+* Use the browser-based tool to strip firmware easily:
+
   > [https://tplink-firmware-stripper.vercel.app](https://tplink-firmware-stripper.vercel.app)
-- Upload your OEM `.bin` file
-- It will download a ready-to-flash stripped firmware.
+* Upload your OEM `.bin` file
+* It will download a ready-to-flash stripped firmware.
 
 ### 🐧 In Linux:
+
 ```bash
 dd if=ArcherC20v5_*.bin of=tplink-stripped.bin skip=257 bs=512
 ```
-> Replace "ArcherC20v5_*.bin" with name of your firmware file.
 
+> Replace "ArcherC20v5\_\*.bin" with name of your firmware file.
 
+### 🪟 In Windows (Alternative Methods)
 
-### 🪟 In Windows (Alternative)
-- Use WSL, a Linux VM, or tools like HxD to manually remove the first 131584 bytes
+#### Method A – Using HxD (GUI):
+
+1. Open the OEM firmware in [HxD](https://mh-nexus.de/en/hxd/)
+2. Press `Ctrl+E` (Edit → Select Block)
+
+   * Length: `1FFA9` (hex)
+3. Press `Delete` or `Ctrl+X` to remove selection
+4. Go to File → Save As → `tplink-stripped.bin`
+
+#### Method B – Using Swiss File Knife (CLI):
+
+```bash
+sfk partcopy ArcherC20v5_*.bin -allfrom 0x1FFA9 tplink-stripped.bin -yes
+```
+
+> Replace the filename with your actual firmware.
+
+✅ **Credit:** Thanks to [u/Economy\_Post\_8574](https://www.reddit.com/user/Economy_Post_8574/) for sharing the Windows instructions!
 
 Save this `tplink-stripped.bin` for flashing.
-> Tip:Keep short understandable names for the files to navigate easily and avoid confuison.
----
 
-## 🔌 Step 2: Transfer the Stripped File to Router
-
-1. Boot into OpenWRT and connect via SSH:
-
-```bash
-ssh root@192.168.1.1
-```
-
-2. Use **WinSCP** or **SCP** to transfer the file to `/tmp/` of the router:
-
-```bash
-scp tplink-stripped.bin root@192.168.1.1:/tmp/
-```
-
-> Note: SCP might not work if `/usr/libexec/sftp-server` is missing, so use WinSCP with SCP mode.
-> Note: Replace "tplink-stripped.bin" with your stripped firmware name.
+> 💡 Tip: Keep short, understandable file names to avoid confusion.
 
 ---
 
