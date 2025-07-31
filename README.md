@@ -137,7 +137,7 @@ When OpenWRT reboots, the new firmware loads — just like magic.
 
 ## 🧵 Thread on Reddit
 
-\[Coming soon: r/openwrt thread link will go here.]
+https://www.reddit.com/r/openwrt/comments/1mdcuhv/successfully_reverted_tplink_archer_c20_v5_from
 
 ---
 
