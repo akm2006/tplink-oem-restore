@@ -2,158 +2,163 @@
 
 > A complete, beginner-friendly guide to restore your TP-Link router back to the original OEM firmware after using OpenWRT — **tested and confirmed on Archer C20 v5**.
 
----
-
 ## 📌 About This Guide
 
 This guide is for users who:
-
-* Installed OpenWRT on their TP-Link router (especially Archer C20 v5)
-* Want to go back to the stock TP-Link firmware
-* Tried but failed with TFTP or firmware stripping tools
-* Are looking for a clean, working step-by-step tutorial that actually works
+- Installed OpenWRT on their TP-Link router (especially Archer C20 v5)
+- Want to go back to the stock TP-Link firmware
+- Tried but failed with TFTP or firmware stripping tools
+- Are looking for a clean, working step-by-step tutorial that actually works
 
 > ⚠️ While this guide is tested specifically on Archer C20 v5, it may work on other TP-Link routers with similar architecture. Proceed carefully and check device-specific forums or Wikis before flashing.
 
----
+***
 
 ## ✅ What You Need
 
-* TP-Link router (confirmed on **Archer C20 v5**)
-* A PC with **Windows or Linux**
-* Working **OpenWRT installed** on the router
-* An Ethernet cable to connect PC ↔ router (recommended)
-* A stripped version of the TP-Link OEM firmware (`tplink-stripped.bin`)
+- TP-Link router (confirmed on **Archer C20 v5**)
+- A PC with **Windows or Linux**
+- Working **OpenWRT installed** on the router
+- An Ethernet cable to connect PC ↔ router (recommended)
+- A stripped version of the TP-Link OEM firmware (`tplink-stripped.bin`)
 
-> ❗ You can strip the firmware using a Linux VM or use the TP-Link firmware and remove the header manually.
+> ❗ You can strip the firmware using a Linux VM, Windows, or a [web app](https://tplink-firmware-stripper.vercel.app/). Always use the stock firmware for your exact model!
 
----
-
-Here's your updated section with the Windows method and credit to the Reddit user:
-
----
+***
 
 ## 🧰 Step 1: Get the OEM Firmware and Strip It
 
-1. Go to TP-Link official site → Support → Your Router Model (e.g., Archer C20 v5) → Download the latest firmware
-2. **Use one of the following methods to strip the firmware header (first 131584 bytes):**
+1. Go to TP-Link official site → Support → Your Router Model (e.g., Archer C20 v5) → Download the latest firmware.
+
+2. Strip the firmware header (first 131584 bytes) by one of these methods:
 
 ### 🟢 Web App (Recommended)
+- Use the browser-based tool: [tplink-firmware-stripper.vercel.app](https://tplink-firmware-stripper.vercel.app/)
+- Upload your OEM `.bin` file.
+- Download the ready-to-flash stripped firmware.
 
-* Use the browser-based tool to strip firmware easily:
-
-  > [https://tplink-firmware-stripper.vercel.app](https://tplink-firmware-stripper.vercel.app)
-* Upload your OEM `.bin` file
-* It will download a ready-to-flash stripped firmware.
-
-### 🐧 In Linux:
-
+### 🐧 Linux Command:
 ```bash
 dd if=ArcherC20v5_*.bin of=tplink-stripped.bin skip=257 bs=512
 ```
+*(Replace "ArcherC20v5_*.bin" with the name of your firmware file.)*
 
-> Replace "ArcherC20v5\_\*.bin" with name of your firmware file.
+### 🪟 Windows Methods
 
-### 🪟 In Windows (Alternative Methods)
+#### A. Using HxD (GUI)
+- Open the OEM firmware in [HxD](https://mh-nexus.de/en/hxd/)
+- Press `Ctrl+E` (Edit → Select Block)
+- Length: `1FFA9` (hex)
+- Delete selection.
+- Save As: `tplink-stripped.bin`
 
-#### Method A – Using HxD (GUI):
-
-1. Open the OEM firmware in [HxD](https://mh-nexus.de/en/hxd/)
-2. Press `Ctrl+E` (Edit → Select Block)
-
-   * Length: `1FFA9` (hex)
-3. Press `Delete` or `Ctrl+X` to remove selection
-4. Go to File → Save As → `tplink-stripped.bin`
-
-#### Method B – Using Swiss File Knife (CLI):
-
+#### B. Swiss File Knife (CLI)
 ```bash
 sfk partcopy ArcherC20v5_*.bin -allfrom 0x1FFA9 tplink-stripped.bin -yes
 ```
+*(Replace filename as needed.)*
 
-> Replace the filename with your actual firmware.
+> **Credit:** Thanks to [u/Economy_Post_8574](https://www.reddit.com/user/Economy_Post_8574/) for Windows instructions!
 
-✅ **Credit:** Thanks to [u/Economy\_Post\_8574](https://www.reddit.com/user/Economy_Post_8574/) for sharing the Windows instructions!
+**Keep your `tplink-stripped.bin` handy for flashing in the next step.**
 
-Save this `tplink-stripped.bin` for flashing.
+***
 
-> 💡 Tip: Keep short, understandable file names to avoid confusion.
+## 🔁 Step 2: Transfer the Stripped Firmware to Your Router
 
----
+You need to move your stripped firmware (`tplink-stripped.bin`) to the router's `/tmp` directory.
+
+**Preferred method: SCP**
+```bash
+scp /path/to/tplink-stripped.bin root@192.168.1.1:/tmp/
+```
+*(Replace paths and IP as needed.)*
+
+**If SCP fails (rare, e.g., on Lubuntu): Stream via SSH/cat**
+```bash
+cat /path/to/tplink-stripped.bin | ssh root@192.168.1.1 'cat > /tmp/tplink-stripped.bin'
+```
+
+- `/tmp` is best for temporary files when flashing.
+- Ensure you have SSH access to the router's OpenWRT shell.
+
+> **Community Tip:** If on other platforms, use above cat trick—works anywhere SSH is available!.[1]
+
+***
 
 ## ⚠️ Step 3: Flash the OEM Firmware via MTD
 
-After transferring the file, SSH into the router and run:
-
+SSH into the router and run:
 ```bash
 cd /tmp
 mtd write tplink-stripped.bin firmware
 ```
-> Note: Replace "tplink-stripped.bin" with your stripped firmware name.
-> Wait for the write process to complete and then restart the router using reboot command. If you see `reboot: I/O error`, don’t panic , you can perform manual reboot.
+*(Change filename to match your stripped file.)*
 
----
+Wait for the process. Then reboot:
+- Run `reboot`.  
+- If you see `reboot: I/O error`, power-cycle the router manually.
+
+***
 
 ## 🔁 Step 4: Manual Reboot
 
-After flashing:
+- Power off (unplug) your router.
+- Wait 5–10 seconds.
+- Plug it back in.
 
-* **Manually power off** the router (unplug it)
-* Wait 5–10 seconds
-* **Power it back on**
+Watch for LEDs:
+- Power LED solid, Wi-Fi LEDs blinking → good sign.
 
-Watch the LEDs:
-
-* Power LED solid → Wi-Fi LEDs blinking → good sign
-
----
+***
 
 ## 🌐 Step 5: Access OEM Interface
 
-Once rebooted:
+- Connect PC via LAN/Wi-Fi.
+- Visit [http://192.168.0.1](http://192.168.0.1/) or [tplinkwifi.net](http://tplinkwifi.net/).
+- You should see the TP-Link web UI!
 
-* Connect your PC to the router via LAN/Wi-Fi
-* Visit: [http://192.168.0.1](http://192.168.0.1) or [http://tplinkwifi.net](http://tplinkwifi.net)
+**Note:** Sometimes old settings and Wi-Fi credentials are auto-restored—TP-Link keeps these in a separate partition.
 
-🎉 You should now see the TP-Link web interface!
-
-Surprisingly, **old saved settings might be restored** automatically — TP-Link keeps them in a separate partition sometimes.
-
----
+***
 
 ## 🛡️ Optional Tips
 
-* Use the TP-Link web UI to create a **settings backup**
-* Don’t update firmware from web UI again unless needed
-* Keep the stripped `.bin` file handy for future restores
+- Make a settings backup in TP-Link UI.
+- Don't update firmware from the web interface unless needed.
+- Keep your stripped file for future restores.
 
----
+***
 
-## 🧠 Why This Works (in simple terms)
+## 🧠 Why This Works
 
-TP-Link OEM firmware has a bootloader header. OpenWRT cannot flash it directly.
+TP-Link's OEM firmware has a bootloader/header OpenWRT can't flash directly.
+- We remove the header with the strip methods above.
+- Once flashed with `mtd`, OEM firmware loads on reboot.
 
-* We remove that header using `dd`
-* Then we flash the clean image using OpenWRT’s `mtd` command
+> ⚠️ Works for some TP-Link models ONLY. Flashing wrong files or skipping stripping can brick your device. Always check device-specific guides!
 
-When OpenWRT reboots, the new firmware loads — just like magic.
+***
 
-> ⚠️ **This method only works on some TP-Link models.** Flashing the wrong file or skipping the strip step may brick your device. Always research your model before applying this!
+## 🧵 Further Reading & Feedback
 
----
+- [Reddit Thread & Discussion](https://www.reddit.com/r/openwrt/comments/1mdcuhv/successfully_reverted_tplink_archer_c20_v5_from/)
+- [GitHub repo](https://github.com/akm2006/tplink-oem-restore)
 
-## 🧵 Thread on Reddit
+Share feedback, try this on other models, and improve the guide for all!
 
-https://www.reddit.com/r/openwrt/comments/1mdcuhv/successfully_reverted_tplink_archer_c20_v5_from
-
----
+***
 
 ## 🙌 Credits
 
-* Inspired by hours of trial, error, and brick recovery 😅
+- Inspired by countless trial, error, and many router bricks 😅
+- Thanks to [Indie_Maverick](https://www.reddit.com/user/Indie_Maverick/) for SCP/cat tip.
+- Thanks to OpenWRT community—every bit helped!
 
----
+***
 
 ## 📬 License
 
-This project is open-sourced under the MIT License.
+MIT License
+
+***
