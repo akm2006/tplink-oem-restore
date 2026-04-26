@@ -70,7 +70,7 @@ You need to move your stripped firmware (`tplink-stripped.bin`) to the router's 
 
 **Preferred method: SCP**
 ```bash
-scp /path/to/tplink-stripped.bin root@192.168.1.1:/tmp/
+scp -O /path/to/tplink-stripped.bin root@192.168.1.1:/tmp/
 ```
 *(Replace paths and IP as needed.)*
 
